@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pixelizacion</title>
+
+    <style>
+      img {
+        margin-top: 5px;
+      }
+
+      div {
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+    <body>
+      <h1>Pixeliza tu fot0!!1!!1! ^_^</h1>
+      <p>Sube una imagen: </p>
+      <input title="foto" id="upload" type="file" accept="image/*" />
+      <div>
+        <img
+          alt="foto"
+          id="imagenPixelizada"
+          src="demo.webp"
+          crossorigin="anonymous"
+        />
+      </div>
+      <div>
+        <span>Pixelation: </span>
+        <input
+          title="pixelizada"
+          type="range"
+          min="0"
+          max="10"
+          value="0"
+          step="1"
+          class="pixelizacion"
+          id="rangoPixelizacion"
+        />
+      </div>
+      <script>
+        const fileInput = document.querySelector("#upload");
+        const imagenPixelizada = document.querySelector("#imagenPixelizada");
+
+        const imagenOriginal = imagenPixelizada.cloneNode(true);
+        const pixelationElement = document.querySelector("#rangoPixelizacion");
+        fileInput.addEventListener("change", async (e) => {
+          const [file] = fileInput.files;
+
+          imagenPixelizada.src = await fileToDataUri(file);
+          imagenOriginal.src = await fileToDataUri(file);
+          pixelationElement.value = 0;
+
+          return false;
+        });
+        pixelationElement.oninput = (e) => {
+          pixelateImage(imagenOriginal, parseInt(e.target.value));
+        };
+        function fileToDataUri(field) {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.addEventListener("load", () => {
+              resolve(reader.result);
+            });
+            reader.readAsDataURL(field);
+          });
+        }
+        function pixelateImage(imagenOriginal, factorPixelacion) {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          const ogWidth = imagenOriginal.width;
+          const ogHeight = imagenOriginal.height;
+          const canvasWidth = ogWidth;
+          const canvasHeight = ogHeight;
+          canvas.width = canvasWidth;
+          canvas.height = canvasHeight;
+          ctx.drawImage(imagenOriginal, 0, 0, ogWidth, ogHeight);
+          const originalImageData = ctx.getImageData(
+            0,
+            0,
+            ogWidth,
+            ogHeight
+          ).data;
+          if (factorPixelacion !== 0) {
+            for (let y = 0; y < ogHeight; y += factorPixelacion) {
+              for (let x = 0; x < ogWidth; x += factorPixelacion) {
+                const pixelIndexPosition = (x + y * ogWidth) * 4;
+                ctx.fillStyle = `rgba(
+          ${originalImageData[pixelIndexPosition]},
+          ${originalImageData[pixelIndexPosition + 1]},
+          ${originalImageData[pixelIndexPosition + 2]},
+          ${originalImageData[pixelIndexPosition + 3]}
+        )`;
+                ctx.fillRect(x, y, factorPixelacion, factorPixelacion);
+              }
+            }
+          }
+          imagenPixelizada.src = canvas.toDataURL();
+        }
+      </script>
+    </body>
+  </html>
+</html>
